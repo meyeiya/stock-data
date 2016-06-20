@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<log4j:configuration xmlns:log4j='http://jakarta.apache.org/log4j/'>
+
+	<appender name="default" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="File" value="/opt/logs/iBiSD.log" />
+		<param name="Append" value="true" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d %-5p [%t] (%c) - %m%n" />
+		</layout>
+	</appender>
+
+	<root>
+		<priority value="DEBUG"></priority>
+		<priority value="INFO" />
+		<appender-ref ref="default" />
+	</root>
+
+</log4j:configuration>
