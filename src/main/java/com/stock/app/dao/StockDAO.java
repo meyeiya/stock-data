@@ -48,6 +48,18 @@ public class StockDAO extends BasicDao  {
         }
     }
     
+	public Stock merge(Stock detachedInstance) {
+        log.debug("merging Stock instance");
+        try {
+        	Stock result = (Stock) getSession()
+                    .merge(detachedInstance);
+            log.debug("merge successful");
+            return result;
+        } catch (RuntimeException re) {
+            log.error("merge failed", re);
+            throw re;
+        }
+    }
     
 	public List findAll() {
 		log.debug("finding all Stock instances");

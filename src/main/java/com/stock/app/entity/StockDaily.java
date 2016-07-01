@@ -2,6 +2,8 @@ package com.stock.app.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -11,13 +13,14 @@ public class StockDaily {
 
 	@Id
 	@Column(name = "id")
+	@GeneratedValue(strategy=GenerationType.AUTO)
 	private int id;
 	
 	@Column(name = "stock_id")
 	private String stockId;
 	
 	@Column(name = "trade_date")
-	private String tradeDate;
+	private Long tradeDate;
 	
 	@Column(name = "max_value")
 	private float maxValue;
@@ -53,11 +56,11 @@ public class StockDaily {
 		this.stockId = stockId;
 	}
 
-	public String getTradeDate() {
+	public Long getTradeDate() {
 		return tradeDate;
 	}
 
-	public void setTradeDate(String tradeDate) {
+	public void setTradeDate(Long tradeDate) {
 		this.tradeDate = tradeDate;
 	}
 
@@ -108,6 +111,30 @@ public class StockDaily {
 	public void setTradeSum(long tradeSum) {
 		this.tradeSum = tradeSum;
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + id;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		StockDaily other = (StockDaily) obj;
+		if (id != other.id)
+			return false;
+		return true;
+	}
+
+	
 	
 	
 }

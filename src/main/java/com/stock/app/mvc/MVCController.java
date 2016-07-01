@@ -1,60 +1,36 @@
+package com.stock.app.mvc;
+
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
-import org.jsoup.select.Elements;
-import org.junit.Test;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.stock.app.dao.OptDAO;
-import com.stock.app.dao.StockDAO;
-import com.stock.app.dao.StockDailyDAO;
-import com.stock.app.entity.Opt;
-import com.stock.app.entity.Stock;
 import com.stock.app.entity.StockDaily;
+import com.stock.app.service.StockService;
 
+@Controller
+@RequestMapping("/mvc")
+public class MVCController {
 
-public class TestCase1 extends BaseCase{
-
-	List<StockDaily> lowList=new ArrayList<StockDaily>();
-	List<StockDaily> highList=new ArrayList<StockDaily>();
-	@Test
-	public void testSave() throws IOException{
-//		System.out.println(stockDAO);
-		ApplicationContext context=new ClassPathXmlApplicationContext("applicationContext.xml");
-		StockDailyDAO stockDailyDAO=(StockDailyDAO) context.getBean("stockDailyDAO");
-		List<StockDaily> stockDailiesList=stockDailyDAO.findByStockId("601006");
-		getStock(stockDailiesList);
-		SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd");
-		for (StockDaily stockDaily : lowList) {
-			Calendar c=Calendar.getInstance();
-			c.setTimeInMillis(stockDaily.getTradeDate());
-			System.out.println(dateFormat.format(c.getTime())+"\t| L"+(lowList.indexOf(stockDaily)+1)+"\t| "+stockDaily.getMinValue());
-		}
-		for (StockDaily stockDaily : highList) {
-			Calendar c=Calendar.getInstance();
-			c.setTimeInMillis(stockDaily.getTradeDate());
-			System.out.println(dateFormat.format(c.getTime())+"\t| H"+(highList.indexOf(stockDaily)+1)+"\t| "+stockDaily.getMaxValue());
-		}
-	}
+	@Autowired
+	private StockService stockService;
 	
-	
-	public void getStock(List<StockDaily> stockDailiesList){
-		List<StockDaily> stockDailies=stockDailiesList;
+	@RequestMapping("/getStock")
+    public void getStock(String stockId,PrintWriter pw){
+		List<StockDaily> stockDailies=this.stockService.getAllStockDailyByStockId(stockId);
+		List<StockDaily> lowList=new ArrayList<StockDaily>();
+		List<StockDaily> highList=new ArrayList<StockDaily>();
 		if(stockDailies.size()>0){
 			int index=0;
 			StockDaily tmp=null;
@@ -103,6 +79,42 @@ public class TestCase1 extends BaseCase{
 
 		}
 		
+		JsonObject jsonObject=new JsonObject();
+		
+		List<Float> highArr=new ArrayList<Float>();
+		
+		for (int i = 0; i < highList.size(); i++) {
+			StockDaily stockDaily=highList.get(i);
+			highArr.add(stockDaily.getMaxValue());
+		}
+		List<Float> lowArr=new ArrayList<Float>();
+		
+		
+		JsonArray jsonArray=new JsonArray();
+		SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd");
+		Calendar c=Calendar.getInstance();
+		for (int i = 0; i < lowList.size(); i++) {
+			JsonObject object1=new JsonObject();
+			StockDaily low=lowList.get(i);
+			c.setTimeInMillis(low.getTradeDate());
+			object1.addProperty("date", dateFormat.format(c.getTime()));
+			object1.addProperty("isMin", 1);
+			object1.addProperty("minValue", low.getMinValue());
+			jsonArray.add(object1);
+			if(i<highList.size()){
+				JsonObject object2=new JsonObject();
+				StockDaily high=highList.get(i);
+				c.setTimeInMillis(high.getTradeDate());
+				object2.addProperty("date", dateFormat.format(c.getTime()));
+				object2.addProperty("isMin", 0);
+				object2.addProperty("maxValue", high.getMaxValue());
+				jsonArray.add(object2);
+			}
+		}
+		jsonObject.add("list",jsonArray);
+//		jsonObject.addProperty("lowList", StringUtils.join(lowArr, ","));
+//		jsonObject.addProperty("highList", StringUtils.join(highArr, ","));
+        pw.write(jsonObject.toString());
     }
 	
 	private StockDaily getLowIn3InList(StockDaily L0tmp,List<StockDaily> stockList){
@@ -190,44 +202,16 @@ public class TestCase1 extends BaseCase{
 		return returnDaily;
 	}
 	
-	
-	
-	
-	public void test1() throws IOException{
-		ApplicationContext context=new ClassPathXmlApplicationContext("applicationContext.xml");
-		StockDAO stockDAO=(StockDAO) context.getBean("stockDAO");
-		OptDAO optDAO=(OptDAO) context.getBean("optDAO");
-		
-		Document doc = Jsoup.connect("http://bbs.10jqka.com.cn/codelist.html")
-		  .userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36")
-		  .proxy("web-proxy.chn.hp.com",8080)
-		  .get();
-//		Element element=doc.getElementById("sh");
-		Element element=doc.getElementById("sz");
-		Element ulElement=null;
-		for (Node node : element.siblingNodes()) {
-			if(node.nodeName().equals("ul")){
-				ulElement=(Element) node;
-				break;
-			}
+	@RequestMapping("/load")
+    public void load(PrintWriter pw){
+		try {
+			stockService.fetchDaily();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-		if(ulElement!=null){
-			List<Stock> stocks=new ArrayList<Stock>();
-			Elements lis=ulElement.select("li");
-			Opt opt=new Opt();
-			opt.setOptTime(new Date().getTime());
-			optDAO.save(opt);
-			for(int i=0;i<lis.size();i++){
-				Element li=lis.get(i);
-				Element a=li.select("a").get(0);
-				String[] arr=a.text().split(" ");
-				Stock stock=new Stock();
-				stock.setStockId(arr[1]);
-				stock.setStockName(arr[0]);
-				stock.setOptId(1);
-				stocks.add(stock);
-			}
-			stockDAO.save(stocks);
-		}
-	}
+        pw.write("ok");
+    }
+	
+	
+
 }

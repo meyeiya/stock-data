@@ -1,4 +1,4 @@
-package df;
+package com.stock.app.service;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -10,14 +10,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.stock.app.dao.StockDAO;
 import com.stock.app.dao.StockDailyDAO;
@@ -25,32 +24,19 @@ import com.stock.app.entity.Stock;
 import com.stock.app.entity.StockDaily;
 import com.sun.javafx.binding.StringFormatter;
 
-public class Test {
+@Service
+@Transactional
+public class StockService {
 
-	static String stockdetail = "http://money.finance.sina.com.cn/corp/go.php/vMS_MarketHistory/stockid/%s.phtml?year=%s&jidu=%s";
-
-	public static void main(String[] args) throws IOException {
-//		String url="http://finance.sina.com.cn/realstock/company/sh600000/nc.shtml";
-//		Document doc = Jsoup.connect(url)
-//				.userAgent(
-//						"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36")
-//				.proxy("web-proxy.chn.hp.com", 8080).get();
-//		doc.getElementById("hqDetails");
-//		loadDaily();
-		List<Float> highArr=new ArrayList<Float>();
-		highArr.add(1.1f);
-		highArr.add(1.2f);
-		highArr.add(1.3f);
-		highArr.add(1.5f);
-		highArr.add(1.3f);
-		highArr.add(1.1f);
-		highArr.add(1.2f);
-		highArr.add(1.3f);
-		highArr.add(1.1f);
-		
-		System.out.println(StringUtils.join(highArr.toArray(), ","));
-	}
-	public static void loadDaily() throws IOException {
+	@Autowired
+	private StockDailyDAO stockDailyDAO;
+	
+	@Autowired
+	private StockDAO stockDAO;
+	
+	private final String stockdetail = "http://money.finance.sina.com.cn/corp/go.php/vMS_MarketHistory/stockid/%s.phtml?year=%s&jidu=%s";
+	
+	public void fetchDaily() throws IOException {
 		Calendar now=Calendar.getInstance();
 		int year=now.get(Calendar.YEAR);
 		int currentMonth = now.get(Calendar.MONTH) + 1; 
@@ -63,9 +49,6 @@ public class Test {
         	jidu=3; 
         else if (currentMonth >= 10 && currentMonth <= 12) 
         	jidu=4; 
-		ApplicationContext context=new ClassPathXmlApplicationContext("applicationContext.xml");
-		StockDAO stockDAO=(StockDAO) context.getBean("stockDAO");
-		StockDailyDAO stockDailyDAO=(StockDailyDAO) context.getBean("stockDailyDAO");
 		List list=stockDAO.findAll();
 		int count=0;
 		for (Object object : list) {
@@ -153,21 +136,26 @@ public class Test {
 					}
 					stockDailyDAO.save(dailyList);
 				}
-//					try {
-//						Thread.sleep(1000);
-//					} catch (InterruptedException e) {
-//						e.printStackTrace();
-//					}
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 			}
 			System.out.println("=======================end saving"+stock.getStockId()+"========================");
-			break;
 		}
 //		OptDAO optDAO=(OptDAO) context.getBean("optDAO");
 		
 		
 	}
-
-	public static float getValue(String str){
+	
+	public List<StockDaily> getAllStockDailyByStockId(String stockId){
+		return this.stockDailyDAO.findByStockId(stockId);
+	}
+	
+	
+	
+	public float getValue(String str){
 		float result=0f;
 		try {
 			if(str!=null&&str.length()>0)
@@ -177,70 +165,18 @@ public class Test {
 			return result;
 		}
 	}
-	public static boolean isNumeric(String str){ 
-		   Pattern pattern = Pattern.compile("[0-9]*"); 
-		   Matcher isNum = pattern.matcher(str);
-		   if( !isNum.matches() ){
-		       return false; 
-		   } 
-		   return true; 
-		}
 	
-	private static Date convertDate(String dateStr) throws ParseException{
+	public boolean isNumeric(String str){ 
+		Pattern pattern = Pattern.compile("[0-9]*"); 
+		Matcher isNum = pattern.matcher(str);
+		if( !isNum.matches() ){
+			return false; 
+		} 
+		return true; 
+	}
+	
+	private Date convertDate(String dateStr) throws ParseException{
 		SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd");
 		return dateFormat.parse(dateStr);
-	}
-	
-	public static void getDailyDemo() throws IOException {
-		Document doc = Jsoup.connect(stockdetail)
-				.userAgent(
-						"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36")
-				.proxy("web-proxy.chn.hp.com", 8080).get();
-		//totalMart2
-		//currMart2
-		
-		
-		Element element = doc.getElementById("FundHoldSharesTable");
-		Elements tbodys = element.select("tbody");
-		Element tbody = tbodys.get(0);
-		Elements trs = tbody.select("tr");
-		for (int i = trs.size() - 1; i > 0; i--) {
-			Element tr = trs.get(i);
-			Elements tds = tr.select("td");
-			for (int j = 0; j < tds.size(); j++) {
-				Element td = tds.get(j);
-				Element contentE = null;
-				if (j == 0)
-					contentE = td.select("div[align='center']>a").get(0);
-				else
-					contentE = td.select("div[align='center']").get(0);
-				System.out.print(contentE.text() + "\t");
-			}
-			System.out.println();
-		}
-	}
-
-	public static void getAllStocks() throws IOException {
-		Document doc = Jsoup.connect("http://bbs.10jqka.com.cn/codelist.html").userAgent(
-				"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36")
-				// .proxy("web-proxy.chn.hp.com",8080)
-				.get();
-		Element element = doc.getElementById("sh");
-		Element ulElement = null;
-		for (Node node : element.siblingNodes()) {
-			if (node.nodeName().equals("ul")) {
-				ulElement = (Element) node;
-				break;
-			}
-		}
-		if (ulElement != null) {
-			Elements lis = ulElement.select("li");
-			for (int i = 0; i < lis.size(); i++) {
-				Element li = lis.get(i);
-				Element a = li.select("a").get(0);
-				String[] arr = a.text().split(" ");
-				System.out.println(arr[0] + "=" + arr[1]);
-			}
-		}
 	}
 }

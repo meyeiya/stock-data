@@ -32,8 +32,11 @@ public class Stock implements java.io.Serializable {
 	@Column(name = "current_mart")
 	private float currentMart;
 	
+	@Column(name = "opt_id")
+	private int optId;
+	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "opt_id")
+	@JoinColumn(name = "opt_id",insertable=false,updatable=false)
 	private Opt opt;
 	
 	public Stock() {
@@ -85,6 +88,14 @@ public class Stock implements java.io.Serializable {
 
 	public void setOpt(Opt opt) {
 		this.opt = opt;
+	}
+
+	public int getOptId() {
+		return optId;
+	}
+
+	public void setOptId(int optId) {
+		this.optId = optId;
 	}
 
 	

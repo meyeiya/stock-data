@@ -12,7 +12,7 @@ public class BasicDao {
 	private SessionFactory sessionFactory;
 	
 	public Session getSession(){
-		return sessionFactory.openSession();
+		return sessionFactory.getCurrentSession();
 	}
 	
 }
