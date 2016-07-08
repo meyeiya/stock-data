@@ -2,11 +2,13 @@ $(document).ready(function() {
 	$("#submitStock").on("click",function(){
 		$.post("mvc/getStock",
 			{
-				stockId:$("#stockId").val()
+				stockId:$("#stockId").val(),
+				queryType:$("#typeSelect").val()
 			},
 			function(data){
 				var aaa=JSON.parse(data); 
 				var arr=aaa.list;
+				var queryTypeList=aaa.queryTypeList;
 				var l=new Array();
 				var h=new Array();
 				var dateArr=new Array();
@@ -22,13 +24,25 @@ $(document).ready(function() {
 						h.push(obj.maxValue);
 					}
 				}
-				var zhang=getZhang(l,h,dateArr);
+				var columnData=getColumnData(queryTypeList);
 				
-				createGraph(landH,dateArr,zhang);
+				createGraph(landH,dateArr,columnData);
+				
+				adjust_y2axis_css();
         	}
 		);
 	});
 });
+
+function adjust_y2axis_css(){
+	$(".jqplot-series-1").each(function(){
+		if(parseFloat($(this).text())>0){
+			$(this).addClass("hasValue");
+		}else{
+			$(this).addClass("noneValue");
+		}
+	});
+}
 
 var plot;
 
@@ -38,6 +52,18 @@ function createGraph(landH,dateArr,zhang) {
 		ticks[i]=new Array();
 		ticks[i][0]=i+1;
 		ticks[i][1]=dateArr[i];
+	}
+	var labels=new Array();
+	labels[0]="高低点价格线";
+	var typeVal=parseInt($("#typeSelect").val());
+	if(typeVal==1){
+		labels[1]="趋势涨幅图";
+	}else if(typeVal==2){
+		labels[1]="趋势回撤图";
+	}else if(typeVal==3){
+		labels[1]="高点比率图";
+	}else if(typeVal==4){
+		labels[1]="低点比率图";
 	}
 	//d2 趨勢圖 price 高低線
 	var plot = $.jqplot("views", [ landH,zhang ], {
@@ -72,7 +98,7 @@ function createGraph(landH,dateArr,zhang) {
 		},
 		legend: {
             show: true,
-            labels: ["趨勢價格線","高點比率圖"]
+            labels: labels
         },
 		series : [ 
 			{
@@ -104,27 +130,17 @@ function createGraph(landH,dateArr,zhang) {
 	
 }
 
-function recreate(){
-	 plot.replot();
-}
-
-function getZhang(l,h,dateArr){
-	var zhang=new Array();
+function getColumnData(queryTypeList){
+	var columnArr=queryTypeList.split(",");
 	
-	for(var i=0;i<h.length;i++){
-		var hx=h[i];
-		var lx=l[i];
-		var v=(hx-lx)*100/lx;
-		zhang.push(parseFloat(v.toFixed(2)));
-	}
 	
 	var d2 = new Array();
-	for(var i=0;i<zhang.length;i++){
+	for(var i=0;i<columnArr.length;i++){
 		var x=2*i;
 		d2[x]=new Array();
 		d2[x+1]=new Array();
 		d2[x][0] =x+1;
-		d2[x][1] = zhang[i];
+		d2[x][1] = parseFloat(columnArr[i]);
 		d2[x+1][0] = (x + 2);
 		d2[x+1][1] = 0;
 	}

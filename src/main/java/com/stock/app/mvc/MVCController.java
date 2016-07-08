@@ -2,6 +2,7 @@ package com.stock.app.mvc;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -18,16 +19,24 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.stock.app.entity.StockDaily;
 import com.stock.app.service.StockService;
+import com.stock.app.util.StockQueryType;
 
 @Controller
 @RequestMapping("/mvc")
 public class MVCController {
 
+	
+	//http://quote.eastmoney.com/stocklist.html
 	@Autowired
 	private StockService stockService;
 	
+	@RequestMapping("/sync")
+    public void syncData(PrintWriter pw){
+		
+	}
+	
 	@RequestMapping("/getStock")
-    public void getStock(String stockId,PrintWriter pw){
+    public void getStock(String stockId,int queryType,PrintWriter pw){
 		List<StockDaily> stockDailies=this.stockService.getAllStockDailyByStockId(stockId);
 		List<StockDaily> lowList=new ArrayList<StockDaily>();
 		List<StockDaily> highList=new ArrayList<StockDaily>();
@@ -87,8 +96,6 @@ public class MVCController {
 			StockDaily stockDaily=highList.get(i);
 			highArr.add(stockDaily.getMaxValue());
 		}
-		List<Float> lowArr=new ArrayList<Float>();
-		
 		
 		JsonArray jsonArray=new JsonArray();
 		SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd");
@@ -111,12 +118,62 @@ public class MVCController {
 				jsonArray.add(object2);
 			}
 		}
+		List queryTypeList=getQueryTypeList(queryType,lowList,highList);
+		
 		jsonObject.add("list",jsonArray);
-//		jsonObject.addProperty("lowList", StringUtils.join(lowArr, ","));
-//		jsonObject.addProperty("highList", StringUtils.join(highArr, ","));
+		jsonObject.addProperty("queryTypeList", StringUtils.join(queryTypeList, ","));
         pw.write(jsonObject.toString());
     }
 	
+	private List getQueryTypeList(int queryType, List<StockDaily> lowList, List<StockDaily> highList) {
+		List<Float> returnList=new ArrayList<Float>();
+		DecimalFormat decimalFormat=new DecimalFormat("0.00");
+		if(queryType==StockQueryType.TRENDUP.getType()){
+			for(int i=0;i<highList.size();i++){
+				StockDaily lowx=lowList.get(i);
+				StockDaily highx=highList.get(i);
+				// H1/L1-1
+				returnList.add(
+						Float.parseFloat(
+								decimalFormat.format((highx.getMaxValue()-lowx.getMinValue())*100/lowx.getMinValue())));
+			}
+		}else if(queryType==StockQueryType.TRENDDOWN.getType()){
+			if(lowList.size()>1){
+				for(int i=1;i<lowList.size();i++){
+					StockDaily lowx=lowList.get(i);
+					StockDaily highx=highList.get(i-1);
+					// L2/H1-1
+					returnList.add(
+							Float.parseFloat(
+									decimalFormat.format((lowx.getMinValue()-highx.getMinValue())*100/highx.getMinValue())));
+				}
+			}
+		}else if(queryType==StockQueryType.TOPRATE.getType()){
+			if(highList.size()>1){
+				for(int i=1;i<highList.size();i++){
+					StockDaily highx=highList.get(i);
+					StockDaily highx_1=highList.get(i-1);
+					//	H2/H1-1
+					returnList.add(
+							Float.parseFloat(
+									decimalFormat.format((highx.getMaxValue()-highx_1.getMaxValue())*100/highx_1.getMaxValue())));
+				}
+			}
+		}else if(queryType==StockQueryType.BOTTOMRATE.getType()){
+			if(lowList.size()>1){
+				for(int i=1;i<lowList.size();i++){
+					StockDaily lowx=lowList.get(i);
+					StockDaily lowx_1=lowList.get(i-1);
+					//	H2/H1-1
+					returnList.add(
+							Float.parseFloat(
+									decimalFormat.format((lowx.getMinValue()-lowx_1.getMinValue())*100/lowx_1.getMinValue())));
+				}
+			}
+		}
+		return returnList;
+	}
+
 	private StockDaily getLowIn3InList(StockDaily L0tmp,List<StockDaily> stockList){
 		StockDaily returnDaily=L0tmp;
 		for(int i=0;i<stockList.size();i=i+3){

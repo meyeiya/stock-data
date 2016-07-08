@@ -13,11 +13,11 @@
 		<script type="text/javascript" src="./js/jqplot.1.0.8/plugins/jqplot.barRenderer.min.js"></script>
 <script type="text/javascript" src="./js/index.js"></script>
 <style>
-	div.jqplot-series-1{
+	.hasValue{
 		color:#000;
 		font-weight: bold;
 	}
-	div.jqplot-series-1:nth-child(2n){
+	.noneValue{
 		color:#fff;
 	}
 	
@@ -26,14 +26,17 @@
 <body>
 <div>
 	<input type="text" id="stockId" style="float: left;">
+	<select id="typeSelect">
+		<option selected="selected" value="1">趋势涨幅</option>
+		<option value="2">趋势回撤</option>
+		<option value="3">高点比率</option>
+		<option value="4">低点比率</option>
+	</select>
 	<button id="submitStock"  style="float: left;">查询</button>
-	<button onclick="recreate();"  style="float: left;">创建</button>
 	<br>
-	601006
 </div>
 <div id="stockInfo1"></div>
-<div id="stockInfo2"></div>
-<div id="stockInfo3"></div>
+
 <br><br><br><br>
 <div id="views" >
 </div>
