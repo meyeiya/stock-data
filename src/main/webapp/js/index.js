@@ -1,9 +1,28 @@
+function toDDMMMYYYY(date) {  
+    var d = new Date(date.getTime());  
+    var dd = d.getDate() < 10 ? "0" + d.getDate() : d.getDate().toString();  
+    var mmm = mths[d.getMonth()];  
+    var yyyy = d.getFullYear().toString(); //2011  
+        //var YY = YYYY.substr(2);   // 11  
+    return dd + mmm + yyyy;  
+}  
+
 $(document).ready(function() {
+	$("#dateInput").jqxDateTimeInput({ width: '200px', height: '25px' });
+	
 	$("#submitStock").on("click",function(){
+		
+		var isCheck=$("#needStartTime").prop("checked")
+		var inputDate=null;
+		if(isCheck)
+			inputDate=$("#dateInput").jqxDateTimeInput('value');
+		var param=inputDate!=null? inputDate.getTime():0;
+		
 		$.post("mvc/getStock",
 			{
 				stockId:$("#stockId").val(),
-				queryType:$("#typeSelect").val()
+				queryType:parseInt($("#typeSelect").val()),
+				startDate:param
 			},
 			function(data){
 				var aaa=JSON.parse(data); 
@@ -13,23 +32,51 @@ $(document).ready(function() {
 				var h=new Array();
 				var dateArr=new Array();
 				var landH=new Array();
+				
+				var htmlLength=arr.length/2;
+				var html="<table><tr>";
+				for(var i=0;i<htmlLength;i++){
+					html+="<td>L"+i+"</td>";
+					html+="<td>H"+i+"</td>";
+				}
+				html+="</tr><tr>";
+				
 				for(var i=0;i<arr.length;i++){
 					var obj=arr[i];
 					dateArr.push(obj.date);
+					html+="<td>";
+					html+="<span>"+obj.date+"</span>";
 					if(obj.isMin==1){
+						html+="<span>"+obj.minValue+"</span>";
 						l.push(obj.minValue);
 						landH[i]=[i+1,obj.minValue];
 					}else{
+						html+="<span>"+obj.maxValue+"</span>";
 						landH[i]=[i+1,obj.maxValue];
 						h.push(obj.maxValue);
 					}
+					
+					html+="</td>";
 				}
+				
+				html+="</tr><table>";
+				$("#stockInfo1").empty().append(html);
+				
 				var columnData=getColumnData(queryTypeList);
 				
 				createGraph(landH,dateArr,columnData);
 				
 				adjust_y2axis_css();
         	}
+		);
+	});
+	
+	
+	$("#syncStock").on("click",function(){
+		$.post("mvc/sync",
+				function(data){
+					alert(data); 
+    			}
 		);
 	});
 });
@@ -67,7 +114,7 @@ function createGraph(landH,dateArr,zhang) {
 	}
 	//d2 趨勢圖 price 高低線
 	var plot = $.jqplot("views", [ landH,zhang ], {
-		title : "test",
+		title : "股票分析",
 		axes : {
 
 			xaxis : {

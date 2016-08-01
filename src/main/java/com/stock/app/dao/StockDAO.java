@@ -64,13 +64,22 @@ public class StockDAO extends BasicDao  {
 	public List findAll() {
 		log.debug("finding all Stock instances");
 		try {
-			String queryString = "from Stock";
+			String queryString = "from Stock stock order by stock.stockId";
 	         Query queryObject = getSession().createQuery(queryString);
 			 return queryObject.list();
 		} catch (RuntimeException re) {
 			log.error("find all failed", re);
 			throw re;
 		}
+	}
+	
+	public List findByQuery(String sql){
+		Query queryObject = getSession().createQuery(sql);
+		return queryObject.list();
+	}
+	
+	public long countByQuery(String sql){
+		return (Long)getSession().createQuery(sql).uniqueResult();
 	}
 	
 }

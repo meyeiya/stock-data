@@ -1,7 +1,7 @@
 package com.stock.app.dao;
 
 import java.util.List;
-
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -73,5 +73,15 @@ public class StockDailyDAO extends BasicDao{
 			log.error("find all failed", re);
 			throw re;
 		}
+	}
+	
+	public List<StockDaily> findByQuery(String sql,Map<String,Object> args) {
+		Query query=getSession().createQuery(sql);
+		if(args!=null&&args.size()>0){
+			for (String key : args.keySet()) {
+				query.setParameter(key, args.get(key));
+			}
+		}
+		return query.list();
 	}
 }

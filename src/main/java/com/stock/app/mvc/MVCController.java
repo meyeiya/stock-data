@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.stock.app.entity.Opt;
 import com.stock.app.entity.StockDaily;
 import com.stock.app.service.StockService;
 import com.stock.app.util.StockQueryType;
@@ -32,15 +34,36 @@ public class MVCController {
 	
 	@RequestMapping("/sync")
     public void syncData(PrintWriter pw){
-		
+		Opt opt=stockService.addNewOpt();
+		try {
+			stockService.syncSHandSZStock(opt);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		stockService.syncStockDailyData(opt);
+		pw.write("1");
 	}
 	
+	
 	@RequestMapping("/getStock")
-    public void getStock(String stockId,int queryType,PrintWriter pw){
-		List<StockDaily> stockDailies=this.stockService.getAllStockDailyByStockId(stockId);
+    public void getStock(String stockId,int queryType,long startDate,PrintWriter pw){
+		List<StockDaily> stockDailies = null;
+		try {
+			stockDailies = this.stockService.getAllStockDailyByStockId_Web(stockId,startDate);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Collections.sort(stockDailies, new Comparator<StockDaily>() {
+
+			@Override
+			public int compare(StockDaily o1, StockDaily o2) {
+				return o1.getTradeDate().compareTo(o2.getTradeDate());
+			}
+		});
 		List<StockDaily> lowList=new ArrayList<StockDaily>();
 		List<StockDaily> highList=new ArrayList<StockDaily>();
-		if(stockDailies.size()>0){
+		if(stockDailies!=null&&stockDailies.size()>0){
 			int index=0;
 			StockDaily tmp=null;
 			StockDaily Lx=null,Hx=null;
@@ -54,13 +77,13 @@ public class MVCController {
 					}
 				}
 				if(index+1>=stockDailies.size()){
-					return;
+					break;
 				}
 				ArrayList<StockDaily> tmpList=new ArrayList<StockDaily>(stockDailies.subList(index+1, stockDailies.size()));
 				StockDaily lowIn3=getLowIn3InList(Lx,(List)tmpList.clone());
 				lowList.add(lowIn3);
 				
-				index=stockDailies.indexOf(lowIn3);
+				index=getIndex(stockDailies,lowIn3);
 				if(index+1>=stockDailies.size()){
 					return;
 				}
@@ -73,15 +96,15 @@ public class MVCController {
 					}
 				}
 				if(index+1>=stockDailies.size()){
-					return;
+					break;
 				}
 				tmpList=new ArrayList<StockDaily>(stockDailies.subList(index+1, stockDailies.size()));
 				StockDaily highIn3=getHighIn3InList(Hx,(List)tmpList.clone());
 				highList.add(highIn3);
 				
-				index=stockDailies.indexOf(highIn3);
+				index=getIndex(stockDailies,highIn3);
 				if(index+1>=stockDailies.size()){
-					return;
+					break;
 				}
 				index++;
 			}
@@ -125,6 +148,19 @@ public class MVCController {
         pw.write(jsonObject.toString());
     }
 	
+	private int getIndex(List<StockDaily> stockDailies, StockDaily obj) {
+		int index=0;
+		for (int i = 0; i < stockDailies.size(); i++) {
+			if(stockDailies.get(i).getTradeDate()==obj.getTradeDate()
+					&&stockDailies.get(i).getStockId().equals(obj.getStockId())){
+				break;
+			}
+			index++;
+		}
+		return index;
+	}
+
+
 	private List getQueryTypeList(int queryType, List<StockDaily> lowList, List<StockDaily> highList) {
 		List<Float> returnList=new ArrayList<Float>();
 		DecimalFormat decimalFormat=new DecimalFormat("0.00");

@@ -29,26 +29,73 @@ public class Test {
 
 	static String stockdetail = "http://money.finance.sina.com.cn/corp/go.php/vMS_MarketHistory/stockid/%s.phtml?year=%s&jidu=%s";
 
+	public static String getStockId(String htmlContent){
+        String result=null;
+        Pattern pattern = Pattern.compile("(?<=\\()(.+?)(?=\\))");
+        Matcher matcher = pattern.matcher(htmlContent);
+        while(matcher.find())
+        	result=matcher.group();
+        return result;
+    }
+	
 	public static void main(String[] args) throws IOException {
-//		String url="http://finance.sina.com.cn/realstock/company/sh600000/nc.shtml";
-//		Document doc = Jsoup.connect(url)
-//				.userAgent(
-//						"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36")
-//				.proxy("web-proxy.chn.hp.com", 8080).get();
-//		doc.getElementById("hqDetails");
-//		loadDaily();
-		List<Float> highArr=new ArrayList<Float>();
-		highArr.add(1.1f);
-		highArr.add(1.2f);
-		highArr.add(1.3f);
-		highArr.add(1.5f);
-		highArr.add(1.3f);
-		highArr.add(1.1f);
-		highArr.add(1.2f);
-		highArr.add(1.3f);
-		highArr.add(1.1f);
+		String url="http://quote.eastmoney.com/stocklist.html";
+		Document doc = Jsoup.connect(url)
+				.userAgent(
+						"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36")
+				.proxy("web-proxy.chn.hp.com", 8080).get();
+		Element element = doc.getElementById("quotesearch");
+		Elements sltits=element.select("div.sltit");
+		Element shUL=null,szUL=null;
+		List<String> shStockList=new ArrayList<String>();
+		List<String> szStockList=new ArrayList<String>();
 		
-		System.out.println(StringUtils.join(highArr.toArray(), ","));
+		for(int i=0;i<sltits.size();i++){
+			Element tmp=sltits.get(i);
+			if(tmp.html().indexOf("sh")>=0){
+				shUL=tmp.nextElementSibling();
+			}else if(tmp.html().indexOf("sz")>=0){
+				szUL=tmp.nextElementSibling();
+			}
+		}
+		if(shUL!=null){
+			Elements liElements=shUL.select("li");
+			for(int i=0;i<liElements.size();i++){
+				String stockId=getStockId(liElements.get(i).html());
+				if(stockId.startsWith("60")){
+					String sub=liElements.get(i).html().substring(0, liElements.get(i).html().lastIndexOf(stockId));
+					System.out.println(sub.substring(sub.lastIndexOf(">")+1,sub.lastIndexOf("(")));
+					shStockList.add(stockId);
+					break;
+				}
+			}
+		}
+		if(szUL!=null){
+			Elements liElements=szUL.select("li");
+			for(int i=0;i<liElements.size();i++){
+				String stockId=getStockId(liElements.get(i).html());
+				if(stockId.startsWith("00")||stockId.startsWith("30")){
+					szStockList.add(stockId);
+				}
+			}
+		}
+		System.out.println("SH="+shStockList.size());
+		System.out.println("SZ="+szStockList.size());
+		
+//		.get(0);
+		//		loadDaily();
+//		List<Float> highArr=new ArrayList<Float>();
+//		highArr.add(1.1f);
+//		highArr.add(1.2f);
+//		highArr.add(1.3f);
+//		highArr.add(1.5f);
+//		highArr.add(1.3f);
+//		highArr.add(1.1f);
+//		highArr.add(1.2f);
+//		highArr.add(1.3f);
+//		highArr.add(1.1f);
+//		
+//		System.out.println(StringUtils.join(highArr.toArray(), ","));
 	}
 	public static void loadDaily() throws IOException {
 		Calendar now=Calendar.getInstance();
