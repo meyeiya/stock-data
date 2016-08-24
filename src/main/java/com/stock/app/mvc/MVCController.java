@@ -32,6 +32,8 @@ public class MVCController {
 	@Autowired
 	private StockService stockService;
 	
+	private final SimpleDateFormat dateFormat=new SimpleDateFormat("MM-dd");
+	
 	@RequestMapping("/sync")
     public void syncData(PrintWriter pw){
 		Opt opt=stockService.addNewOpt();
@@ -121,7 +123,7 @@ public class MVCController {
 		}
 		
 		JsonArray jsonArray=new JsonArray();
-		SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd");
+		
 		Calendar c=Calendar.getInstance();
 		for (int i = 0; i < lowList.size(); i++) {
 			JsonObject object1=new JsonObject();
@@ -130,6 +132,8 @@ public class MVCController {
 			object1.addProperty("date", dateFormat.format(c.getTime()));
 			object1.addProperty("isMin", 1);
 			object1.addProperty("minValue", low.getMinValue());
+			object1.addProperty("tradeVol", low.getTradeVol());
+			object1.addProperty("tradeSum", low.getTradeSum());
 			jsonArray.add(object1);
 			if(i<highList.size()){
 				JsonObject object2=new JsonObject();
@@ -138,6 +142,8 @@ public class MVCController {
 				object2.addProperty("date", dateFormat.format(c.getTime()));
 				object2.addProperty("isMin", 0);
 				object2.addProperty("maxValue", high.getMaxValue());
+				object2.addProperty("tradeVol", high.getTradeVol());
+				object2.addProperty("tradeSum", high.getTradeSum());
 				jsonArray.add(object2);
 			}
 		}
@@ -181,7 +187,7 @@ public class MVCController {
 					// L2/H1-1
 					returnList.add(
 							Float.parseFloat(
-									decimalFormat.format((lowx.getMinValue()-highx.getMinValue())*100/highx.getMinValue())));
+									decimalFormat.format((lowx.getMinValue()-highx.getMaxValue())*100/highx.getMaxValue())));
 				}
 			}
 		}else if(queryType==StockQueryType.TOPRATE.getType()){

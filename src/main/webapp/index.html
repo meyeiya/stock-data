@@ -3,106 +3,129 @@
 <head>
 <meta charset="UTF-8">
 <title>趋势图</title>
-    <link type="text/css" rel="stylesheet" href="./js/jqplot.1.0.8/jquery.jqplot.css" />
-    <link rel="stylesheet" href="./js/jqwidgets-ver4.1.2/jqwidgets/styles/jqx.base.css" type="text/css" />
-		<script type="text/javascript" src="./js/jquery.js"></script>
-		<script type="text/javascript" src="./js/jqplot.1.0.8/jquery.jqplot.js"></script>
-		<script type="text/javascript" src="./js/jqplot.1.0.8/plugins/jqplot.highlighter.min.js"></script>
-		<script type="text/javascript" src="./js/jqplot.1.0.8/plugins/jqplot.cursor.min.js"></script>
-		<script type="text/javascript" src="./js/jqplot.1.0.8/plugins/jqplot.canvasOverlay.js"></script>
-		<script type="text/javascript" src="./js/jqplot.1.0.8/plugins/jqplot.pointLabels.min.js"></script>
-		<script type="text/javascript" src="./js/jqplot.1.0.8/plugins/jqplot.barRenderer.min.js"></script>
-		
-		<script type="text/javascript" src="./js/jqwidgets-ver4.1.2/jqwidgets/jqxcore.js"></script>
-	    <script type="text/javascript" src="./js/jqwidgets-ver4.1.2/jqwidgets/jqxdatetimeinput.js"></script>
-	    <script type="text/javascript" src="./js/jqwidgets-ver4.1.2/jqwidgets/jqxcalendar.js"></script>
-	    <script type="text/javascript" src="./js/jqwidgets-ver4.1.2/jqwidgets/jqxtooltip.js"></script>
-	    <script type="text/javascript" src="./js/jqwidgets-ver4.1.2/jqwidgets/globalization/globalize.js"></script>
+<link type="text/css" rel="stylesheet"
+	href="./js/jqplot.1.0.8/jquery.jqplot.css" />
+<link rel="stylesheet"
+	href="./js/jqwidgets-ver4.1.2/jqwidgets/styles/jqx.base.css"
+	type="text/css" />
+<script type="text/javascript" src="./js/jquery.js"></script>
+<script type="text/javascript" src="./js/jqplot.1.0.8/jquery.jqplot.js"></script>
+<script type="text/javascript"
+	src="./js/jqplot.1.0.8/plugins/jqplot.highlighter.min.js"></script>
+<script type="text/javascript"
+	src="./js/jqplot.1.0.8/plugins/jqplot.cursor.min.js"></script>
+<script type="text/javascript"
+	src="./js/jqplot.1.0.8/plugins/jqplot.canvasOverlay.js"></script>
+<script type="text/javascript"
+	src="./js/jqplot.1.0.8/plugins/jqplot.pointLabels.min.js"></script>
+<script type="text/javascript"
+	src="./js/jqplot.1.0.8/plugins/jqplot.barRenderer.min.js"></script>
+
+<script type="text/javascript"
+	src="./js/jqwidgets-ver4.1.2/jqwidgets/jqxcore.js"></script>
+<script type="text/javascript"
+	src="./js/jqwidgets-ver4.1.2/jqwidgets/jqxdatetimeinput.js"></script>
+<script type="text/javascript"
+	src="./js/jqwidgets-ver4.1.2/jqwidgets/jqxcalendar.js"></script>
+<script type="text/javascript"
+	src="./js/jqwidgets-ver4.1.2/jqwidgets/jqxtooltip.js"></script>
+<script type="text/javascript"
+	src="./js/jqwidgets-ver4.1.2/jqwidgets/globalization/globalize.js"></script>
 <script type="text/javascript" src="./js/index.js"></script>
 <style>
-	body{
-		font-size: 12px;
-	}
-	.hasValue{
-		color:#000;
-		font-weight: bold;
-	}
-	.noneValue{
-		color:#fff;
-	}
-	#stockInfo1{
-		width: 1200px;
-		overflow: scroll;
-		clear:both;
-		margin-top:20px;
-	}
-	table{
-		width:auto;
-	}
-	td{
-		width:100px;
-	}
-	td>span{
-		width:100px;
-		height:30;
-		line-height:30px;
-		display: block;
-	}
-	.inputDiv{
-		float:left;
-		width:300px;
-		margin:0 20px;
-	}
-	.inputDiv label{
-		height: 20px;
-		line-height: 20px;
-	}
-	
-	#typeSelect{
-		float: left;
-		margin: 0 20px;
-		height: 24px;
-	}
+body {
+	font-size: 12px;
+}
+
+.hasValue {
+	color: #000;
+	font-weight: bold;
+}
+
+.noneValue {
+	color: #fff;
+	display: none;
+}
+
+#stockInfo1 {
+	width: 1200px;
+	overflow: scroll;
+	clear: both;
+	margin-top: 20px;
+}
+
+table {
+	width: auto;
+}
+
+td {
+	width: 100px;
+}
+
+td>span {
+	width: 100px;
+	height: 30;
+	line-height: 30px;
+	display: block;
+}
+
+.inputDiv {
+	float: left;
+	width: 300px;
+	margin: 0 20px;
+}
+
+.inputDiv label {
+	height: 20px;
+	line-height: 20px;
+}
+
+#typeSelect {
+	float: left;
+	margin: 0 20px;
+	height: 24px;
+}
 </style>
 </head>
 <body>
-<div style="display: none;">
-	<button id="syncStock">同步</button>
-	<br>
-	<br>
-</div>
-<div style="margin-top: 20px;">
-	<div class="inputDiv">
-		<label style="float: left;">股票代码：</label>
-		<input type="text" id="stockId" style="float: left;height: 20px;">
+	<div style="display: none;">
+		<button id="syncStock">同步</button>
+		<br> <br>
 	</div>
-	
-	<div class="inputDiv">
-		<label style="float: left;">显示图形：</label>
-		<select id="typeSelect">
-			<option selected="selected" value="1">趋势涨幅</option>
-			<option value="2">趋势回撤</option>
-			<option value="3">高点比率</option>
-			<option value="4">低点比率</option>
-		</select>
-	</div>
-	
-	<div class="inputDiv">
-		<input type="checkbox" id="needStartTime"  style="float: left;"/>		
-		<label style="float: left;">开始时间：</label>
-		<div id="dateInput" style="float: left;"></div>
-	</div>
-	
-	<br style="clear:both;margin:20px 0;">
-	<button id="submitStock"  style="margin-left: 20px;">查询</button>
-	<div style="border-bottom: 1px dashed #000;width: 1000px;height: 1px;clear: both;margin-top: 20px;">
-	</div>
-</div>
-<div id="stockInfo1">
-</div>
+	<div style="margin-top: 20px;">
+		<div class="inputDiv">
+			<label style="float: left;">股票代码：</label> <input type="text"
+				id="stockId" style="float: left; height: 20px;">
+		</div>
 
-<br><br><br><br>
-<div id="views" >
-</div>
+		<div class="inputDiv">
+			<label style="float: left;">显示图形：</label> <select id="typeSelect">
+				<option selected="selected" value="1">趋势涨幅</option>
+				<option value="2">趋势回撤</option>
+				<option value="3">高点比率</option>
+				<option value="4">低点比率</option>
+			</select>
+		</div>
+
+		<div class="inputDiv">
+			<input type="checkbox" id="needStartTime" style="float: left;" /> <label
+				style="float: left;">开始时间：</label>
+			<div id="dateInput" style="float: left;"></div>
+		</div>
+
+		<br style="clear: both; margin: 20px 0;">
+		<button id="submitStock" style="margin-left: 20px;">查询</button>
+		<div
+			style="border-bottom: 1px dashed #000; width: 1000px; height: 1px; clear: both; margin-top: 20px;">
+		</div>
+	</div>
+	<div id="stockInfo1">
+	</div>
+
+	<br>
+	<br>
+	<br>
+	<br>
+	<div id="views"></div>
 </body>
 </html>

@@ -34,30 +34,49 @@ $(document).ready(function() {
 				var landH=new Array();
 				
 				var htmlLength=arr.length/2;
-				var html="<table><tr>";
+				var html="<table><tr><td></td>";
 				for(var i=0;i<htmlLength;i++){
 					html+="<td>L"+i+"</td>";
 					html+="<td>H"+i+"</td>";
 				}
 				html+="</tr><tr>";
 				
+				var line1="<td><span>交易日</span></td>",line2="<td><span>最低/高价</span></td>",line3="<td><span>交易量</span></td>",line4="<td><span>交易额</span></td>";
 				for(var i=0;i<arr.length;i++){
 					var obj=arr[i];
 					dateArr.push(obj.date);
-					html+="<td>";
-					html+="<span>"+obj.date+"</span>";
+					line1+="<td>";
+					line1+="<span>"+obj.date+"</span>";
+					line1+="</td>";
 					if(obj.isMin==1){
-						html+="<span>"+obj.minValue+"</span>";
+						line2+="<td>";
+						line2+="<span>"+obj.minValue+"</span>";
+						line2+="</td>";
 						l.push(obj.minValue);
 						landH[i]=[i+1,obj.minValue];
 					}else{
-						html+="<span>"+obj.maxValue+"</span>";
+						line2+="<td>";
+						line2+="<span>"+obj.maxValue+"</span>";
+						line2+="</td>";
 						landH[i]=[i+1,obj.maxValue];
 						h.push(obj.maxValue);
 					}
+					line3+="<td>";
+					line3+="<span>"+obj.tradeVol+"</span>";
+					line3+="</td>";
 					
-					html+="</td>";
+					line4+="<td>";
+					line4+="<span>"+obj.tradeSum+"</span>";
+					line4+="</td>";
 				}
+				
+				html+=line1;
+				html+="</tr><tr>";
+				html+=line2;
+				html+="</tr><tr>";
+				html+=line3;
+				html+="</tr><tr>";
+				html+=line4;
 				
 				html+="</tr><table>";
 				$("#stockInfo1").empty().append(html);
@@ -83,7 +102,7 @@ $(document).ready(function() {
 
 function adjust_y2axis_css(){
 	$(".jqplot-series-1").each(function(){
-		if(parseFloat($(this).text())>0){
+		if(parseFloat($(this).text())!=0){
 			$(this).addClass("hasValue");
 		}else{
 			$(this).addClass("noneValue");
@@ -94,6 +113,8 @@ function adjust_y2axis_css(){
 var plot;
 
 function createGraph(landH,dateArr,zhang) {
+	$("#views").empty();
+	
 	var ticks=new Array();
 	for(var i=0;i<dateArr.length;i++){
 		ticks[i]=new Array();
@@ -180,6 +201,17 @@ function createGraph(landH,dateArr,zhang) {
 function getColumnData(queryTypeList){
 	var columnArr=queryTypeList.split(",");
 	
+	var typeVal=parseInt($("#typeSelect").val());
+	if(typeVal==1){
+//		labels[1]="趋势涨幅图";
+	}else if(typeVal==2){
+//		labels[1]="趋势回撤图";
+	}else if(typeVal==3){
+//		labels[1]="高点比率图";
+	}else if(typeVal==4){
+//		labels[1]="低点比率图";
+	}
+	
 	
 	var d2 = new Array();
 	for(var i=0;i<columnArr.length;i++){
@@ -187,9 +219,31 @@ function getColumnData(queryTypeList){
 		d2[x]=new Array();
 		d2[x+1]=new Array();
 		d2[x][0] =x+1;
-		d2[x][1] = parseFloat(columnArr[i]);
-		d2[x+1][0] = (x + 2);
-		d2[x+1][1] = 0;
+		d2[x+1][0] = x + 2;
+		
+		if(typeVal==2){
+			d2[x+1][1] = parseFloat(columnArr[i]);
+			d2[x][1] = 0;
+		}else if(typeVal==3){
+			if(i==0){
+				d2[x][1] = 0;
+				d2[x+1][1] = 0;
+			}else{
+				d2[x+1][1] = parseFloat(columnArr[i-1]);
+				d2[x][1] = 0;
+			}
+		}else if(typeVal==4){
+			if(i==0){
+				d2[x][1] = 0;
+				d2[x+1][1] = 0;
+			}else{
+				d2[x][1] = parseFloat(columnArr[i-1]);
+				d2[x+1][1] = 0;
+			}
+		}else{
+			d2[x][1] = parseFloat(columnArr[i]);
+			d2[x+1][1] = 0;
+		}
 	}
 	
 	return d2;
