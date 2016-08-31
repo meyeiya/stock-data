@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -46,9 +45,13 @@ public class MVCController {
 		pw.write("1");
 	}
 	
+	@RequestMapping("/test")
+    public void test(PrintWriter pw){
+		pw.write("1");
+	}
 	
 	@RequestMapping("/getStock")
-    public void getStock(String stockId,int queryType,long startDate,PrintWriter pw){
+    public void getStock(String stockId,long startDate,PrintWriter pw){
 		List<StockDaily> stockDailies = null;
 		try {
 			stockDailies = this.stockService.getAllStockDailyByStockId_Web(stockId,startDate);
@@ -147,10 +150,13 @@ public class MVCController {
 				jsonArray.add(object2);
 			}
 		}
-		List queryTypeList=getQueryTypeList(queryType,lowList,highList);
+		List<List<Float>> queryTypeList=getQueryTypeList(lowList,highList);
 		
 		jsonObject.add("list",jsonArray);
-		jsonObject.addProperty("queryTypeList", StringUtils.join(queryTypeList, ","));
+		jsonObject.addProperty("queryTypeList_1", StringUtils.join(queryTypeList.get(0), ","));
+		jsonObject.addProperty("queryTypeList_2", StringUtils.join(queryTypeList.get(1), ","));
+		jsonObject.addProperty("queryTypeList_3", StringUtils.join(queryTypeList.get(2), ","));
+		jsonObject.addProperty("queryTypeList_4", StringUtils.join(queryTypeList.get(3), ","));
         pw.write(jsonObject.toString());
     }
 	
@@ -166,8 +172,17 @@ public class MVCController {
 		return index;
 	}
 
+	private List<List<Float>> getQueryTypeList(List<StockDaily> lowList, List<StockDaily> highList){
+		List<List<Float>> returnList=new ArrayList<List<Float>>();
+		returnList.add(getQueryTypeList(StockQueryType.TRENDUP.getType(),lowList,highList));
+		returnList.add(getQueryTypeList(StockQueryType.TRENDDOWN.getType(),lowList,highList));
+		returnList.add(getQueryTypeList(StockQueryType.TOPRATE.getType(),lowList,highList));
+		returnList.add(getQueryTypeList(StockQueryType.BOTTOMRATE.getType(),lowList,highList));
+		
+		return returnList;
+	}
 
-	private List getQueryTypeList(int queryType, List<StockDaily> lowList, List<StockDaily> highList) {
+	private List<Float> getQueryTypeList(int queryType, List<StockDaily> lowList, List<StockDaily> highList) {
 		List<Float> returnList=new ArrayList<Float>();
 		DecimalFormat decimalFormat=new DecimalFormat("0.00");
 		if(queryType==StockQueryType.TRENDUP.getType()){
